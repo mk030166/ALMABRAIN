@@ -2,7 +2,7 @@
 """
 FASE 2 - PASSO 1: DOWNLOAD DEI SOTTOTITOLI
 ==========================================
-Per ogni video di dati/video_nutrizione.csv scarica i sottotitoli in italiano
+Per ogni video da trascrivere (vedi VIDEO_DA_TRASCRIVERE in config.py) scarica i sottotitoli in italiano
 (manuali se esistono, altrimenti automatici) in formato .vtt nella cartella
 sottotitoli_raw/. I file si chiamano  <id>.manuali.vtt  oppure  <id>.automatici.vtt
 
@@ -12,7 +12,7 @@ sottotitoli_raw/. I file si chiamano  <id>.manuali.vtt  oppure  <id>.automatici.
 - I video senza sottotitoli italiani vanno in dati/senza_sottotitoli.csv
   (non vengono ricontrollati ai lanci successivi, salvo --ricontrolla).
 
-Per escludere un video basta cancellarne la riga da dati/video_nutrizione.csv.
+Ordine: prima i video di ALIMENTAZIONE e MISTO, poi tutti gli altri (dal piu' recente).
 
 Uso:
     python scripts/03_scarica_sottotitoli.py
@@ -27,10 +27,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 import yt_dlp  # noqa: E402
 
 import config  # noqa: E402
-from comune import (ERRORI, SENZA_SOTTOTITOLI, SOTTOTITOLI, VIDEO_NUTRIZIONE, Bloccato,  # noqa: E402
+from comune import (ERRORI, SENZA_SOTTOTITOLI, SOTTOTITOLI, Bloccato, video_da_trascrivere,  # noqa: E402
                     con_pazienza, leggi_csv, opzioni_ytdlp, pausa, prepara_console, scrivi_csv)
 
-CAMPI_SENZA = ["id", "titolo", "data_pubblicazione", "durata", "categoria", "url", "motivo"]
+CAMPI_SENZA = ["id", "titolo", "data_pubblicazione", "durata", "categoria", "area_principale", "url", "motivo"]
 CAMPI_ERRORI = ["fase", "id", "titolo", "errore"]
 
 
@@ -91,9 +91,9 @@ def main():
                     help="riprova anche i video gia' segnati senza sottotitoli")
     args = ap.parse_args()
 
-    video = leggi_csv(VIDEO_NUTRIZIONE)
+    video = video_da_trascrivere()
     if not video:
-        sys.exit("Non trovo dati/video_nutrizione.csv: completa prima la Fase 1.")
+        sys.exit("Non trovo l'elenco dei video: completa prima la Fase 1 (script 01 e 02).")
     SOTTOTITOLI.mkdir(parents=True, exist_ok=True)
 
     senza = {r["id"]: r for r in leggi_csv(SENZA_SOTTOTITOLI) if r.get("id")}
@@ -104,7 +104,7 @@ def main():
     da_fare = [v for v in video if not gia_scaricato(v["id"]) and v["id"] not in senza]
     if args.limite:
         da_fare = da_fare[: args.limite]
-    print(f"Video confermati: {len(video)}  -  gia' scaricati: "
+    print(f"Video da trascrivere: {len(video)}  -  gia' scaricati: "
           f"{sum(gia_scaricato(v['id']) for v in video)}  -  senza sottotitoli (gia' noti): "
           f"{sum(v['id'] in senza for v in video)}  -  da scaricare ora: {len(da_fare)}")
     if da_fare:

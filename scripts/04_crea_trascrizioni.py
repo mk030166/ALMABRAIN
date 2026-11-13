@@ -4,7 +4,7 @@ FASE 2 - PASSO 2: PULIZIA DEI SOTTOTITOLI E CREAZIONE DELLE TRASCRIZIONI
 ========================================================================
 Legge i file .vtt di sottotitoli_raw/ e crea per ogni video
     trascrizioni/AAAA-MM-GG_<id>.md
-con in testa titolo, data, durata, URL, categoria, e poi il testo in
+con in testa titolo, data, durata, URL, categoria e tematiche, e poi il testo in
 paragrafi leggibili, ognuno con un marcatore di tempo [mm:ss].
 
 Pulizia:
@@ -25,8 +25,8 @@ from collections import deque
 
 sys.path.insert(0, os.path.dirname(__file__))
 import config  # noqa: E402
-from comune import (CLASSIFICAZIONE, ELENCO_VIDEO, SOTTOTITOLI, TRASCRIZIONI,  # noqa: E402
-                    VIDEO_NUTRIZIONE, leggi_csv, prepara_console)
+from comune import (ELENCO_VIDEO, SOTTOTITOLI, TRASCRIZIONI, leggi_csv,  # noqa: E402
+                    prepara_console, video_da_trascrivere)
 
 RX_TEMPO = re.compile(r"(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{1,3})")
 RX_TAG = re.compile(r"<[^>]*>")
@@ -137,6 +137,18 @@ def virgolette(s):
     return '"' + str(s or "").replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def voci(s):
+    return [x.strip() for x in str(s or "").split("|") if x.strip()]
+
+
+def lista_yaml(s):
+    return "[" + ", ".join(virgolette(x) for x in voci(s)) + "]"
+
+
+def separa(s):
+    return ", ".join(voci(s)) or "-"
+
+
 def crea_md(meta, tipo, paragrafi_testo):
     data = meta.get("data_pubblicazione") or "data-sconosciuta"
     intestazione = [
@@ -147,6 +159,11 @@ def crea_md(meta, tipo, paragrafi_testo):
         f"durata: {virgolette(meta.get('durata'))}",
         f"url: {meta.get('url') or 'https://www.youtube.com/watch?v=' + meta['id']}",
         f"categoria: {meta.get('categoria', '')}",
+        f"area_principale: {virgolette(meta.get('area_principale'))}",
+        f"aree_secondarie: {lista_yaml(meta.get('aree_secondarie'))}",
+        f"argomenti: {lista_yaml(meta.get('argomenti'))}",
+        f"pubblico: {lista_yaml(meta.get('pubblico'))}",
+        f"formato: {lista_yaml(meta.get('formato'))}",
         f"sottotitoli: {tipo}",
         "---",
         "",
@@ -155,7 +172,12 @@ def crea_md(meta, tipo, paragrafi_testo):
         f"- **Data:** {data}",
         f"- **Durata:** {meta.get('durata', '')}",
         f"- **URL:** {meta.get('url', '')}",
-        f"- **Categoria:** {meta.get('categoria', '')}",
+        f"- **Categoria alimentazione:** {meta.get('categoria', '')}",
+        f"- **Area principale:** {meta.get('area_principale', '')}",
+        f"- **Aree secondarie:** {separa(meta.get('aree_secondarie'))}",
+        f"- **Argomenti:** {separa(meta.get('argomenti'))}",
+        f"- **Pubblico:** {separa(meta.get('pubblico'))}",
+        f"- **Formato:** {separa(meta.get('formato'))}",
         f"- **Sottotitoli:** {tipo}",
         "",
         "## Trascrizione",
@@ -167,8 +189,7 @@ def crea_md(meta, tipo, paragrafi_testo):
 
 def main():
     prepara_console()
-    confermati = {r["id"]: r for r in leggi_csv(VIDEO_NUTRIZIONE) if r.get("id")}
-    tutti = {r["id"]: r for r in leggi_csv(CLASSIFICAZIONE) if r.get("id")}
+    confermati = {r["id"]: r for r in video_da_trascrivere()}
     elenco = {r["id"]: r for r in leggi_csv(ELENCO_VIDEO) if r.get("id")}
     TRASCRIZIONI.mkdir(parents=True, exist_ok=True)
 
@@ -180,9 +201,9 @@ def main():
     for p in file_vtt:
         vid, tipo = p.name.split(".")[0], p.name.split(".")[1]
         if vid not in confermati:
-            saltati += 1   # non (piu') tra i video confermati
+            saltati += 1   # non (piu') tra i video da trascrivere
             continue
-        meta = {**elenco.get(vid, {}), **tutti.get(vid, {}), **confermati[vid]}
+        meta = {**elenco.get(vid, {}), **confermati[vid]}
         meta["id"] = vid
         testo = p.read_text(encoding="utf-8", errors="replace")
         par = paragrafi(frammenti_unici(leggi_vtt(testo)))
@@ -201,7 +222,7 @@ def main():
     if vuoti:
         print(f"Sottotitoli vuoti dopo la pulizia ({len(vuoti)}): {', '.join(vuoti)}")
     if saltati:
-        print(f"File ignorati perche' non piu' tra i video confermati: {saltati}")
+        print(f"File ignorati perche' non piu' tra i video da trascrivere: {saltati}")
     print("Prossimo passo:  python scripts/05_report.py")
 
 

@@ -12,6 +12,7 @@ Non scaricano i video.
 | 2 – Sottotitoli | `03_scarica_sottotitoli.py` | scarica i sottotitoli italiani | `sottotitoli_raw/*.vtt`, `dati/senza_sottotitoli.csv` |
 | 2 – Trascrizioni | `04_crea_trascrizioni.py` | pulisce e crea i testi | `trascrizioni/AAAA-MM-GG_id.md` |
 | 2 – Report | `05_report.py` | statistiche e stima token | `report.md` |
+| Tematiche | `06_tematiche.py` | aree, argomenti, pubblico, formato di tutti i video | `dati/tematiche.csv` |
 
 Le impostazioni (pause, parole chiave, ecc.) sono in `scripts/config.py`.
 
@@ -94,7 +95,24 @@ Per **escludere** un video dalla Fase 2 basta cancellarne la riga da `dati/video
 
 ---
 
-## 3. Fase 2 – Trascrizioni
+## 3. Classificazione per tematiche (tutti i video)
+
+```
+.venv\Scripts\python scripts\06_tematiche.py
+```
+Assegna a ogni video: **area principale** (Alimentazione, Dolore e fisioterapia, Esercizio e movimento,
+Cervello sonno e mente, Cuore e circolazione, ...), **aree secondarie**, **argomenti**, **pubblico**
+e **formato**. Risultati in `dati/tematiche.csv` e `dati/riepilogo_tematiche.md`.
+Schema e parole chiave: `scripts/tematiche_config.py`. Correzioni manuali: `dati/revisione_tematiche.csv`
+(colonne `id;area_principale;argomenti`), che hanno sempre la precedenza.
+
+---
+
+## 4. Fase 2 – Trascrizioni
+
+Quali video trascrivere si sceglie in `scripts/config.py` (`VIDEO_DA_TRASCRIVERE`):
+`"tutti"` (impostazione attuale) oppure `"alimentazione"`. Si parte sempre dai video di
+ALIMENTAZIONE e MISTO, poi tutti gli altri, dal più recente.
 
 ```
 .venv\Scripts\python scripts\03_scarica_sottotitoli.py --limite 3
@@ -103,17 +121,20 @@ Per **escludere** un video dalla Fase 2 basta cancellarne la riga da `dati/video
 .venv\Scripts\python scripts\05_report.py
 ```
 
-- Il download fa una pausa di 5-10 secondi tra un video e l'altro (per circa 300 video, ~45 minuti).
+- Pausa di 5-10 secondi tra un video e l'altro: per tutti i 1.519 video servono **4-5 ore**
+  (si può fare in più volte: Ctrl+C e poi rilanciare, riprende da dove era rimasto).
 - Se YouTube blocca, lo script aspetta (1, 3, 10, 20 minuti) e riprova; se il blocco continua
-  si ferma: **rilancialo più tardi**, salta i video già scaricati.
+  si ferma: **rilancialo più tardi**.
 - I video senza sottotitoli italiani finiscono in `dati/senza_sottotitoli.csv`
   (per riprovarli: `03_scarica_sottotitoli.py --ricontrolla`).
+- `04` e `05` si possono rilanciare quando si vuole (es. dopo aver corretto le tematiche):
+  rigenerano intestazioni e report senza riscaricare nulla.
 
 ---
 
-## 4. Aggiornare la base in futuro (nuovi video)
+## 5. Aggiornare la base in futuro (nuovi video)
 
-Rilancia in ordine gli script da `01` a `05`. Vengono elaborati solo i video nuovi;
+Rilancia in ordine: `01`, `02`, `06`, `03`, `04`, `05`. Vengono elaborati solo i video nuovi;
 le revisioni manuali restano valide.
 
 ## Problemi frequenti

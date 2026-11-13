@@ -20,6 +20,7 @@ CLASSIFICAZIONE = DATI / "classificazione_completa.csv"
 VIDEO_NUTRIZIONE = DATI / "video_nutrizione.csv"
 DA_RIVEDERE = DATI / "da_rivedere.csv"
 REVISIONE_MANUALE = DATI / "revisione_manuale.csv"
+TEMATICHE = DATI / "tematiche.csv"
 SENZA_SOTTOTITOLI = DATI / "senza_sottotitoli.csv"
 ERRORI = DATI / "errori.csv"
 REPORT = RADICE / "report.md"
@@ -70,6 +71,28 @@ def leggi_csv(percorso):
     # ripulisce eventuali spazi nei nomi delle colonne
     return [{(k or "").strip(): (v or "").strip() if isinstance(v, str) else v
              for k, v in r.items()} for r in righe]
+
+
+CAMPI_TEMATICHE = ("area_principale", "aree_secondarie", "argomenti", "pubblico", "formato")
+
+
+def video_da_trascrivere():
+    """Elenco dei video per la Fase 2, con tutti i dati disponibili (anche le tematiche).
+    Ordine: prima ALIMENTAZIONE e MISTO, poi gli altri; in ogni gruppo dal piu' recente."""
+    if config.VIDEO_DA_TRASCRIVERE == "alimentazione":
+        base = leggi_csv(VIDEO_NUTRIZIONE)
+    else:
+        base = leggi_csv(CLASSIFICAZIONE)
+    tematiche = {r["id"]: r for r in leggi_csv(TEMATICHE) if r.get("id")}
+    elenco = []
+    for r in base:
+        if not r.get("id"):
+            continue
+        t = tematiche.get(r["id"], {})
+        elenco.append({**r, **{k: t.get(k, "") for k in CAMPI_TEMATICHE}})
+    elenco.sort(key=lambda m: m.get("data_pubblicazione") or "", reverse=True)
+    elenco.sort(key=lambda m: 0 if m.get("categoria") in ("ALIMENTAZIONE", "MISTO") else 1)
+    return elenco
 
 
 def formatta_durata(secondi):

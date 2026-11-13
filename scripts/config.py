@@ -12,6 +12,11 @@ CANALE_URL = "https://www.youtube.com/@AlmaPhysio"
 # Includere anche le dirette (tab "Live")? Gli Shorts sono sempre esclusi.
 INCLUDI_DIRETTE = False
 
+# --- Fase 2: quali video trascrivere ------------------------------------------
+# "tutti"          = tutti i video del canale (prima alimentazione e misti, poi gli altri)
+# "alimentazione"  = solo i video ALIMENTAZIONE e MISTO (dati/video_nutrizione.csv)
+VIDEO_DA_TRASCRIVERE = "tutti"
+
 # --- Pause tra le richieste a YouTube (secondi, scelte a caso tra min e max) --
 PAUSA_METADATI = (1.5, 4.0)      # Fase 1: lettura dei dettagli di ogni video
 PAUSA_SOTTOTITOLI = (5.0, 10.0)  # Fase 2: download dei sottotitoli
