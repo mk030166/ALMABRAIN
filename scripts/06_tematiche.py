@@ -11,7 +11,8 @@ Assegna a ogni video:
 
 Lo schema e le parole chiave sono in scripts/tematiche_config.py.
 Le correzioni manuali vanno in dati/revisione_tematiche.csv
-(colonne: id;area_principale;argomenti) e hanno sempre la precedenza.
+(colonne: id;area_principale;argomenti; si puo' compilare anche solo una delle due)
+e hanno sempre la precedenza.
 
 Richiede: dati/elenco_video.csv e dati/classificazione_completa.csv (Fase 1).
 Risultati: dati/tematiche.csv e dati/riepilogo_tematiche.md
@@ -60,6 +61,7 @@ def compila(parole):
 
 
 SCHEMA = {area: {arg: compila(p) for arg, p in args.items()} for area, args in TC.AREE.items()}
+AREA_DI = {arg: area for area, args in TC.AREE.items() for arg in args}
 PUBBLICO = {k: compila(v) for k, v in TC.PUBBLICO.items()}
 FORMATO = {k: compila(v) for k, v in TC.FORMATO.items()}
 
@@ -129,6 +131,15 @@ def main():
             for campo in ("area_principale", "argomenti"):
                 if man.get(campo):
                     r[campo] = man[campo]
+            # aree secondarie coerenti: tolgo la principale, aggiungo le aree degli argomenti
+            sec = [x for x in r["aree_secondarie"].split(" | ") if x]
+            if r["categoria_alimentazione"] in ("ALIMENTAZIONE", "MISTO") and "ALIMENTAZIONE" not in sec:
+                sec.insert(0, "ALIMENTAZIONE")   # i video misti restano sempre legati all'alimentazione
+            for arg in [x for x in r["argomenti"].split(" | ") if x]:
+                area = AREA_DI.get(arg)
+                if area and area not in sec:
+                    sec.append(area)
+            r["aree_secondarie"] = " | ".join(x for x in sec if x != r["area_principale"])
             r["stato"] = "REVISIONATA"
         righe.append(r)
 

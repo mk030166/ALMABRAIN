@@ -176,6 +176,9 @@ AREE = {
         ],
         "Ormoni e tiroide": ["tiroid", "ormon", "ipotiroid"],
         "Infiammazione": ["infiamm", "antinfiammator", "anti infiammator"],
+        "Ossa e osteoporosi": [
+            "osteopor", "ossa\\b", "osse[oa]\\b", "densit[aà] ossea", "mineralizzazione ossea", "midollo osseo",
+        ],
     },
     "PELLE, DENTI E SENSI": {
         "Pelle, capelli e aspetto": [
