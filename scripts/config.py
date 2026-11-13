@@ -35,6 +35,19 @@ BROWSER_COOKIE = None
 # frase o dopo una pausa; comunque non oltre PARAGRAFO_MAX secondi.
 PARAGRAFO_MIN = 30
 PARAGRAFO_MAX = 60
+# Se i sottotitoli hanno la punteggiatura, si aspetta la fine della frase
+# fino a questi secondi oltre PARAGRAFO_MAX (cosi' le frasi non vengono spezzate).
+PARAGRAFO_TOLLERANZA = 20
+
+# --- Correzioni automatiche degli errori del riconoscimento vocale -----------
+# "parola sbagliata": "parola giusta" (non distingue maiuscole/minuscole).
+# Aggiungi qui gli errori ricorrenti che noti leggendo le trascrizioni.
+CORREZIONI = {
+    "Almafisio": "AlmaPhysio",
+    "Alma Fisio": "AlmaPhysio",
+    "Alma Physio": "AlmaPhysio",
+    "Almaphisio": "AlmaPhysio",
+}
 
 # --- Stima token per la Fase 3 -----------------------------------------------
 # Per l'italiano si stimano circa 1,5 token per parola (intervallo 1,3 - 1,7).

@@ -195,7 +195,7 @@ AREE = {
     },
     "FARMACI, ESAMI E SANITÀ": {
         "Farmaci e sostanze": [
-            "farmac", "statine", "aspirina", "ibuprofene", "tachipirina", "metformina", "losartan",
+            "(?<!senza )farmac", "statine", "aspirina", "ibuprofene", "tachipirina", "metformina", "losartan",
             "valium", "diazepam", "sonnifer", "ozempic", "glp-1", "pillol", "cannabi", "cbd", "marijuana",
             "medicin[ae]\\b", "antidepressiv",
         ],
@@ -249,7 +249,7 @@ FORMATO = {
         "rinforzo", "4 zampe", "manovra", "automassaggio", "trazioni? (per|fantastiche)", "manipolazion",
         "fisioterapia (milano|schiena|ginocchio|spalla|anca|cervicale|caviglia)\\s*-", "allenati", "pancia piatta",
         "ginnastica", "lezione", "routine di", "classe di", "yoga con", "yoga per", "meditazione guidata",
-        "pratica serale", "\\d+ min(uti)? (di|con)", "giorno:", "allenamento per principianti",
+        "pratica serale", "\\d+ min(uti)? (di|con)", "^\\d+ giorno:", "allenamento per principianti",
         "esercizi con gianluca", "per nonni", "seguimi",
     ],
     "Testimonianza o caso clinico": [

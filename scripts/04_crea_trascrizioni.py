@@ -94,24 +94,50 @@ def frammenti_unici(cue):
     return risultato
 
 
+def ha_punteggiatura(frammenti):
+    testo = " ".join(t for _, t in frammenti)
+    parole = max(1, len(testo.split()))
+    return testo.count(".") + testo.count("?") > parole / 60   # almeno ~1 frase ogni 60 parole
+
+
+RX_FINE_INTERNA = re.compile(r'[.?!…]["»”]?\s+(?=["«“]?[A-ZÀ-Ý0-9])')
+
+
 def paragrafi(frammenti, minimo=None, massimo=None):
     minimo = minimo or config.PARAGRAFO_MIN
     massimo = massimo or config.PARAGRAFO_MAX
+    # con la punteggiatura si aspetta la fine della frase (entro la tolleranza)
+    punt = ha_punteggiatura(frammenti)
+    limite = massimo + getattr(config, "PARAGRAFO_TOLLERANZA", 0) if punt else massimo
     out, corrente, t0, t_prec = [], [], None, None
+
+    def chiudi():
+        nonlocal corrente, t0
+        if corrente:
+            out.append((t0, corrente))
+        corrente, t0 = [], None
+
     for t, testo in frammenti:
         if corrente:
             trascorso = t - t0
             pausa = t - t_prec
             fine = corrente[-1].endswith(FINE_FRASE)
-            if trascorso >= massimo or (trascorso >= minimo and (fine or pausa >= 5)):
-                out.append((t0, corrente))
-                corrente, t0 = [], None
+            if trascorso >= limite or (trascorso >= minimo and (fine or pausa >= 5)):
+                chiudi()
+            elif punt and trascorso >= minimo:
+                # la frase finisce dentro questo pezzo: chiudo li' e il resto va a capo
+                mm = RX_FINE_INTERNA.search(testo)
+                if mm:
+                    corrente.append(testo[:mm.end()].strip())
+                    chiudi()
+                    testo = testo[mm.end():].strip()
+        t_prec = t
+        if not testo:
+            continue
         if not corrente:
             t0 = t
         corrente.append(testo)
-        t_prec = t
-    if corrente:
-        out.append((t0, corrente))
+    chiudi()
     risultato, maiuscola = [], True
     for t, parti in out:
         testo = sistema_testo(" ".join(parti), maiuscola)
@@ -120,8 +146,14 @@ def paragrafi(frammenti, minimo=None, massimo=None):
     return risultato
 
 
+CORREZIONI = [(re.compile(r"(?<![\w])" + re.escape(k) + r"(?![\w])", re.IGNORECASE), v)
+              for k, v in getattr(config, "CORREZIONI", {}).items()]
+
+
 def sistema_testo(s, maiuscola=True):
     s = re.sub(r"\s+", " ", s).strip()
+    for rx, giusta in CORREZIONI:
+        s = rx.sub(giusta, s)
     s = re.sub(r"\s+([,.;:!?])", r"\1", s)
     return (s[:1].upper() + s[1:]) if maiuscola else s
 
