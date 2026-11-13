@@ -54,6 +54,10 @@ ALIMENTAZIONE_FORTI = [
     "formagg", "glutine", "lattosio", "cereal", "caff(e|è)", "alcol", "vino",
     "olio d", "frutta secca", "antiossidant", "ultraprocessat", "junk food",
     "fame", "sazi", "steatosi", "fegato grasso", "resistenza insulinica",
+    "semi\\b", "semini", "noci\\b", "mandorl", "nocciol", "avena", "chia\\b", "lino\\b",
+    "cacao", "cioccolat", "yogurt", "kefir", "fermentat", "miele", "spezie", "zenzero",
+    "aglio", "cipoll", "pomodor", "olive\\b", "avocado", "broccol", "bibit", "succhi",
+    "snack", "ricett", "t(è|e) verde", "superfood",
 ]
 
 # Parole legate all'alimentazione ma ambigue (da sole fanno scattare la revisione)

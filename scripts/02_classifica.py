@@ -97,6 +97,10 @@ def classifica(v, ricorrenti):
             return ("MISTO", "DA_RIVEDERE",
                     f"titolo di alimentazione ({elenco(f_tit)}) ma la descrizione parla molto "
                     f"anche di altro ({elenco(a_des)})")
+        if altro_desc >= 2:
+            return ("ALIMENTAZIONE", "DA_RIVEDERE",
+                    f"titolo di alimentazione ({elenco(f_tit)}); la descrizione cita anche "
+                    f"altri temi ({elenco(a_des)}): forse MISTO")
         return ("ALIMENTAZIONE", "AUTOMATICA", f"titolo di alimentazione: {elenco(f_tit)}")
     if f_tit and a_tit:
         return ("MISTO", "AUTOMATICA",
