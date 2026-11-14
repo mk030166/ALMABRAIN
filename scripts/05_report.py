@@ -77,7 +77,8 @@ def main():
         parole_cat[c] += d["parole"]
         per_area[a] += 1
         parole_area[a] += d["parole"]
-    per_tipo = Counter(d.get("sottotitoli", "?") for d in dati)
+    per_tipo = Counter(d.get("sottotitoli", "?").split(" ")[0] for d in dati)
+    integrati = sum(1 for d in dati if "incompleti" in d.get("sottotitoli", ""))
 
     tok = token(tot_parole)
     tok_min, tok_max = tot_parole * 1.3, tot_parole * 1.7
@@ -102,6 +103,7 @@ def main():
          f"| Video elaborati (trascrizione creata) | {len(dati)} |",
          f"| - con sottotitoli manuali | {per_tipo.get('manuali', 0)} |",
          f"| - con sottotitoli automatici | {per_tipo.get('automatici', 0)} |",
+         f"| - di cui al posto di manuali incompleti | {integrati} |",
          f"| Video senza sottotitoli italiani | {len(senza)} |",
          f"| Errori registrati | {len(errori)} |",
          f"| Video non ancora elaborati | {len(mancanti)} |",

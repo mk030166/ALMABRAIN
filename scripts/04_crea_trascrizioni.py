@@ -219,6 +219,26 @@ def crea_md(meta, tipo, paragrafi_testo):
     return "\n".join(intestazione) + "\n" + "\n".join(corpo)
 
 
+# gli automatici sostituiscono i manuali solo se hanno almeno questa quota di parole in piu'
+MARGINE_AUTOMATICI = 1.15
+
+
+def scegli_versione(file_per_tipo):
+    """Restituisce (etichetta del tipo, paragrafi) scegliendo la versione piu' completa."""
+    risultati = {}
+    for tipo, p in file_per_tipo.items():
+        testo = p.read_text(encoding="utf-8", errors="replace")
+        par = paragrafi(frammenti_unici(leggi_vtt(testo)))
+        risultati[tipo] = (par, sum(len(t.split()) for _, t in par))
+    if "manuali" in risultati and "automatici" in risultati:
+        (par_m, n_m), (par_a, n_a) = risultati["manuali"], risultati["automatici"]
+        if n_a > n_m * MARGINE_AUTOMATICI:
+            return "automatici (i manuali erano incompleti)", par_a
+        return "manuali", par_m
+    tipo = next(iter(risultati))
+    return tipo, risultati[tipo][0]
+
+
 def main():
     prepara_console()
     confermati = {r["id"]: r for r in video_da_trascrivere()}
@@ -229,16 +249,22 @@ def main():
     if not file_vtt:
         sys.exit("Nessun file in sottotitoli_raw/: lancia prima scripts/03_scarica_sottotitoli.py")
 
-    fatti, vuoti, saltati = 0, [], 0
+    # per ogni video possono esserci due versioni (manuali e automatici): raggruppo
+    versioni = {}
     for p in file_vtt:
         vid, tipo = p.name.split(".")[0], p.name.split(".")[1]
+        versioni.setdefault(vid, {})[tipo] = p
+
+    fatti, vuoti, saltati, integrati = 0, [], 0, 0
+    for vid, file_per_tipo in sorted(versioni.items()):
         if vid not in confermati:
             saltati += 1   # non (piu') tra i video da trascrivere
             continue
         meta = {**elenco.get(vid, {}), **confermati[vid]}
         meta["id"] = vid
-        testo = p.read_text(encoding="utf-8", errors="replace")
-        par = paragrafi(frammenti_unici(leggi_vtt(testo)))
+        tipo, par = scegli_versione(file_per_tipo)
+        if tipo.startswith("automatici ("):
+            integrati += 1
         if not par:
             vuoti.append(vid)
             continue
@@ -251,6 +277,8 @@ def main():
         fatti += 1
 
     print(f"Trascrizioni create/aggiornate: {fatti}")
+    if integrati:
+        print(f"Di cui con sottotitoli automatici al posto dei manuali incompleti: {integrati}")
     if vuoti:
         print(f"Sottotitoli vuoti dopo la pulizia ({len(vuoti)}): {', '.join(vuoti)}")
     if saltati:

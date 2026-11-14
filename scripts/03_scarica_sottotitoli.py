@@ -38,9 +38,9 @@ def gia_scaricato(vid):
     return any(SOTTOTITOLI.glob(f"{vid}.*.vtt"))
 
 
-def scegli_traccia(info):
+def scegli_traccia(info, solo_automatici=False):
     """Restituisce (tipo, lingua) oppure (None, motivo)."""
-    manuali = info.get("subtitles") or {}
+    manuali = {} if solo_automatici else (info.get("subtitles") or {})
     for lingua in sorted(manuali, key=lambda k: (k != "it", k)):
         if lingua.lower().startswith("it") and "live_chat" not in lingua:
             return "manuali", lingua
@@ -55,12 +55,12 @@ def scegli_traccia(info):
     return None, "nessun sottotitolo disponibile"
 
 
-def scarica(vid):
-    """Scarica la traccia migliore. Restituisce (tipo, percorso) o (None, motivo)."""
+def scarica(vid, solo_automatici=False):
+    """Scarica la traccia migliore (o solo quella automatica). Restituisce (tipo, percorso) o (None, motivo)."""
     url = f"https://www.youtube.com/watch?v={vid}"
     with yt_dlp.YoutubeDL(opzioni_ytdlp()) as ydl:
         info = ydl.extract_info(url, download=False)
-    tipo, lingua = scegli_traccia(info)
+    tipo, lingua = scegli_traccia(info, solo_automatici)
     if not tipo:
         return None, lingua
 
